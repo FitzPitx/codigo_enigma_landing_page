@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+/* Tipos */
+:root { color-scheme: dark; }
+body { font-family: 'Inter', system-ui, sans-serif; background:#000; color:#fff; }
+
+/* Utilidad para títulos/menú elegante */
+.font-display { font-family: "Playfair Display", ui-serif, Georgia, serif; }
+
+/* Línea sutil bajo el header */
+.header-line { height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent); }
