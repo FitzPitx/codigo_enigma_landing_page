@@ -29,7 +29,7 @@ export default function Navbar() {
               href="#login"
               className="inline-flex items-center rounded-xl px-4 py-2 text-sm font-semibold
                          text-white shadow-sm transition
-                         bg-gradient-to-r from-blue-600 to-cyan-400
+                         bg-linear-to-r from-blue-600 to-cyan-400
                          hover:from-blue-500 hover:to-cyan-300
                          focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
             >
