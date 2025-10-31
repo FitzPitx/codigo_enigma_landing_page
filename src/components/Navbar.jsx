@@ -1,4 +1,24 @@
+import { useEffect, useState } from "react";
+
 export default function Navbar() {
+  const [active, setActive] = useState("home");
+
+  useEffect(() => {
+    const sections = document.querySelectorAll("section[id]");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActive(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-40% 0px -50% 0px", threshold: 0 }
+    );
+    sections.forEach((sec) => observer.observe(sec));
+    return () => sections.forEach((sec) => observer.unobserve(sec));
+  }, []);
+
   return (
     <header className="fixed inset-x-0 top-0 z-50 bg-black/60 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -16,26 +36,25 @@ export default function Navbar() {
           {/* Centro: Menú */}
           <nav className="hidden md:flex justify-center">
             <ul className="flex items-center gap-7 font-display text-sm tracking-wide text-white/80">
-              <li>
-                <a href="#home" className="hover:text-white">
-                  Inicio
-                </a>
-              </li>
-              <li>
-                <a href="#academy" className="hover:text-white">
-                  Academia
-                </a>
-              </li>
-              <li>
-                <a href="#plans" className="hover:text-white">
-                  Planes
-                </a>
-              </li>
-              <li>
-                <a href="#community" className="hover:text-white">
-                  Comunidad
-                </a>
-              </li>
+              {[
+                ["home", "Inicio"],
+                ["academy", "Academia"],
+                ["plans", "Planes"],
+                ["community", "Comunidad"],
+              ].map(([id, label]) => (
+                <li key={id}>
+                  <a
+                    href={`#${id}`}
+                    className={`hover:text-white transition ${
+                      active === id
+                        ? "text-white font-semibold"
+                        : "text-white/70"
+                    }`}
+                  >
+                    {label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </nav>
 

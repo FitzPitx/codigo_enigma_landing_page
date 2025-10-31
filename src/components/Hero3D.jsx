@@ -4,131 +4,149 @@ import * as THREE from "three";
 const vertexShader = `
 uniform float uTime;
 uniform float uAmp;
-uniform float uFreqX;
-uniform float uFreqY;
 
-varying vec2 vUv;
-varying float vHeight;
+attribute float aSize;
 
 void main(){
-  vUv = uv;
   vec3 pos = position;
-
-  float waveX = sin((pos.x * uFreqX) + uTime*0.8);
-  float waveY = cos((pos.y * uFreqY) - uTime*1.2);
-  float h = (waveX + waveY) * 0.25 * uAmp;
-
-  pos.z += h;
-  vHeight = h;
-
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  
+  float distance = length(pos.xz);
+  
+  float wave = sin(distance * 0.3 - uTime * 2.0) * uAmp;
+  float wave2 = cos(distance * 0.2 + uTime * 1.5) * uAmp * 0.5;
+  
+  pos.y = wave + wave2;
+  
+  vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+  gl_Position = projectionMatrix * mvPosition;
+  
+  gl_PointSize = aSize * (300.0 / -mvPosition.z);
 }
 `;
 
 const fragmentShader = `
-precision highp float;
-
-uniform float uDotScale;
-uniform vec3 uColorA;
-uniform vec3 uColorB;
-
-varying vec2 vUv;
-varying float vHeight;
-
-float dotMask(vec2 uv, float scale){
-  vec2 g = fract(uv * scale) - 0.5;
-  float d = length(g) * 2.0;
-  return smoothstep(0.45, 0.4, d);
-}
+uniform float uOpacity;
 
 void main(){
-  float mask = dotMask(vUv, uDotScale);
-  float shade = 0.55 + vHeight * 0.9;
-  vec3 base = mix(uColorA, uColorB, clamp(shade, 0.0, 1.0));
-  vec3 color = mix(base*0.35, base, mask);
-  gl_FragColor = vec4(color, 1.0);
+  vec2 center = gl_PointCoord - vec2(0.5);
+  float dist = length(center);
+  
+  float alpha = smoothstep(0.2, 0.3, dist);
+  
+  if (alpha < 0.01) discard;
+  
+  gl_FragColor = vec4(1.0, 1.0, 1.0, alpha * uOpacity);
 }
 `;
 
 export default function Hero3D() {
   const mountRef = useRef(null);
-  const uiRef = useRef(null); // contenedor de título/CTA
+  const uiRef = useRef(null);
 
   useEffect(() => {
-    // ---------- THREE ----------
     const mount = mountRef.current;
-    const w = mount.clientWidth;
-    const h = mount.clientHeight;
+    
+    // Usar dimensiones de ventana completas
+    const w = window.innerWidth;
+    const h = window.innerHeight;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
     mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#000");
 
-    const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    camera.position.set(0, 1.1, 3.0);
+    const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+    camera.position.set(0, 40, 80);
+    camera.lookAt(0, 0, 0);
 
-    const geometry = new THREE.PlaneGeometry(6, 3, 300, 160);
+    const count = 100;
+    const separation = 3;
+    const numParticles = count * count;
+    
+    const positions = new Float32Array(numParticles * 3);
+    const sizes = new Float32Array(numParticles);
+    
+    let i = 0;
+    for (let ix = 0; ix < count; ix++) {
+      for (let iz = 0; iz < count; iz++) {
+        const x = (ix - count / 2) * separation;
+        const z = (iz - count / 2) * separation;
+        const y = 0;
+        
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+        
+        sizes[i] = Math.random() * 1.5 + 0.5;
+        i++;
+      }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+
     const uniforms = {
-      uTime:     { value: 0 },
-      uAmp:      { value: 1.0 },
-      uFreqX:    { value: 3.0 },
-      uFreqY:    { value: 2.0 },
-      uDotScale: { value: 120.0 },
-      uColorA:   { value: new THREE.Color("#0a0a0a") },
-      uColorB:   { value: new THREE.Color("#0041A3") }
+      uTime: { value: 0 },
+      uAmp: { value: 8.0 },
+      uOpacity: { value: 0.6 },
     };
-    const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.rotation.x = -Math.PI / 3.2;
-    mesh.position.y = -0.2;
-    scene.add(mesh);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const material = new THREE.ShaderMaterial({
+      uniforms,
+      vertexShader,
+      fragmentShader,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
     const clock = new THREE.Clock();
 
+    // Función de resize actualizada para usar window dimensions
     const onResize = () => {
-      const W = mount.clientWidth, H = mount.clientHeight;
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      
       renderer.setSize(W, H);
       camera.aspect = W / H;
       camera.updateProjectionMatrix();
     };
     window.addEventListener("resize", onResize);
 
-    // ---------- PARALLAX: mouse + scroll ----------
-    const target = new THREE.Vector2();
+    const target = new THREE.Vector3(0, 40, 80);
     const onPointerMove = (e) => {
       const x = (e.clientX / window.innerWidth) * 2 - 1;
-      const y = (e.clientY / window.innerHeight) * 2 - 1;
-      target.set(x * 0.08, y * 0.04);
+      const y = -(e.clientY / window.innerHeight) * 2 + 1;
+      target.x = x * 15;
+      target.y = 40 + y * 10;
     };
     window.addEventListener("pointermove", onPointerMove);
 
-    // UI parallax (título/CTA)
     let scrollY = 0, current = 0;
-    const SPEED_UI = 0.15;     // suavizado del título
-    const FACTOR_UI = 0.25;    // cuánto se mueve el título
-
+    const SPEED_UI = 0.15;
+    const FACTOR_UI = 0.25;
     const onScroll = () => { scrollY = window.scrollY || 0; };
     window.addEventListener("scroll", onScroll, { passive: true });
 
     const tick = () => {
       uniforms.uTime.value = clock.getElapsedTime();
 
-      // cámara parallax
       camera.position.x += (target.x - camera.position.x) * 0.05;
-      camera.position.y = 1.1 + (target.y * 0.5);
+      camera.position.y += (target.y - camera.position.y) * 0.05;
       camera.lookAt(0, 0, 0);
 
-      // UI parallax
       current += (scrollY - current) * SPEED_UI;
-      const translate = Math.min(current * FACTOR_UI, 120); // límite en px
+      const translate = Math.min(current * FACTOR_UI, 120);
       if (uiRef.current) {
         uiRef.current.style.transform = `translate3d(0, ${translate}px, 0)`;
-        const fade = Math.max(1 - current / 600, 0); // se desvanece un poco al bajar
+        const fade = Math.max(1 - current / 600, 0);
         uiRef.current.style.opacity = String(fade);
       }
 
@@ -142,33 +160,34 @@ export default function Hero3D() {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("scroll", onScroll);
       mount.removeChild(renderer.domElement);
-      renderer.dispose(); geometry.dispose(); material.dispose();
+      renderer.dispose();
+      geometry.dispose();
+      material.dispose();
     };
   }, []);
 
   return (
-    <section className="h-screen w-full relative overflow-hidden">
-      {/* lienzo WebGL */}
+    <section className="h-screen w-full relative overflow-hidden bg-black">
+      {/* WebGL con altura completa */}
       <div ref={mountRef} className="absolute inset-0" />
 
-      {/* contenido UI con Playfair y parallax */}
+      {/* UI */}
       <div ref={uiRef} className="relative z-10 h-full flex items-center justify-center text-center px-6 will-change-transform">
         <div>
-
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/80 text-xs border border-white/20">
+            <span className="size-2 rounded-full bg-white/80" /> BETA RELEASE
+          </span>
           <h1 className="mt-6 text-5xl md:text-7xl font-display leading-tight">
-            Desbloquea Tú <span className="text-white/70 italic">Crecimiento</span>
+            Desbloquea tu <span className="text-white/70 italic">crecimiento</span>
           </h1>
           <p className="mt-4 text-white/70 max-w-2xl mx-auto">
-            A través de estrategias de inversión perpetua que superan el mercado
+            Estrategias de inversión/performance para traders exigentes.
           </p>
-          <a href="#contact" className="inline-block mt-8 px-6 py-3 rounded-xl bg-linear-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300">
-            CONTACTANOS
+          <a href="#contact" className="inline-block mt-8 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300">
+            [CONTACTANOS]
           </a>
         </div>
       </div>
-
-      {/* degradado para contraste */}
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/10 via-transparent to-black/60" />
     </section>
   );
 }
