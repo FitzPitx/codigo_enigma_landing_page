@@ -1,9 +1,18 @@
 @import "tailwindcss";
 
-/* Tipos */
-:root { 
-    color-scheme: dark; 
+/* ====== Brand type ====== */
+@font-face {
+  font-family: "Nohemi";
+  src: url("/public/fonts/Nohemi-Regular.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
 }
+
+/* Tipos */
+:root { color-scheme: dark; }
+body { font-family: "Nohemi", Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#000; color:#fff; }
+
 
 body { 
     font-family: 'Inter', system-ui, sans-serif; 
@@ -18,4 +27,35 @@ body {
 /* Línea sutil bajo el header */
 .header-line { height:1px; 
     background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent); 
+}
+
+/* ====== Brand palette (CSS variables) ====== */
+:root{
+  --blue-charcoal:#000b1c;
+  --iron:#eaeaeb;
+  --shuttle-gray:#63666a;
+  --mine-shaft:#3d3d3d;
+  --silver:#bfbfbf;
+  --manatee:#98999c;
+  --cod-gray:#0c0c0c;
+  --mirage:#1c2433;
+}
+
+
+/* Utilidades rápidas basadas en la paleta */
+.bg-base   { background: var(--blue-charcoal); }
+.bg-panel  { background: color-mix(in srgb, var(--mirage) 55%, #000 45%); }
+.text-muted{ color: color-mix(in srgb, var(--iron) 70%, #fff 30%); }
+.border-soft{ border-color: color-mix(in srgb, var(--iron) 12%, #000 88%); }
+
+/* Titulares con gradiente azul → cian */
+.heading-gradient{
+  background: linear-gradient(90deg, #37a0ff, #26d0ce);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Cards limpias */
+.card{
+  @apply rounded-2xl border p-6 bg-white/[0.03];
+  border-color: color-mix(in srgb, var(--iron) 10%, #000 90%);
 }

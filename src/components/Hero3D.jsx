@@ -31,7 +31,7 @@ void main(){
   vec2 center = gl_PointCoord - vec2(0.5);
   float dist = length(center);
   
-  float alpha = smoothstep(0.2, 0.3, dist);
+  float alpha = smoothstep(0.8, 0.3, dist);
   
   if (alpha < 0.01) discard;
   
@@ -136,7 +136,8 @@ export default function Hero3D() {
     window.addEventListener("scroll", onScroll, { passive: true });
 
     const tick = () => {
-      uniforms.uTime.value = clock.getElapsedTime();
+      const SPEED = 0.35;  // ⬅️ menor = más lento (0.2–0.6)
+      uniforms.uTime.value = clock.getElapsedTime() * SPEED;  
 
       camera.position.x += (target.x - camera.position.x) * 0.05;
       camera.position.y += (target.y - camera.position.y) * 0.05;
@@ -174,17 +175,9 @@ export default function Hero3D() {
       {/* UI */}
       <div ref={uiRef} className="relative z-10 h-full flex items-center justify-center text-center px-6 will-change-transform">
         <div>
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/80 text-xs border border-white/20">
-            <span className="size-2 rounded-full bg-white/80" /> BETA RELEASE
-          </span>
-          <h1 className="mt-6 text-5xl md:text-7xl font-display leading-tight">
-            Desbloquea tu <span className="text-white/70 italic">crecimiento</span>
-          </h1>
-          <p className="mt-4 text-white/70 max-w-2xl mx-auto">
-            Estrategias de inversión/performance para traders exigentes.
-          </p>
-          <a href="#contact" className="inline-block mt-8 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300">
-            [CONTACTANOS]
+          <h1 className=" mt-6 text-5xl md:text-7xl font-display leading-tight">Desarrolla tu mejor versión y domina el <span className="text-white/70 italic">Arte del Trading</span></h1>
+          <a href="#contact" className="inline-block mt-8 px-6 py-3 rounded-xl bg-linear-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300">
+            ¡Quiero más info!
           </a>
         </div>
       </div>

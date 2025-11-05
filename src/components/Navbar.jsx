@@ -23,7 +23,7 @@ export default function Navbar() {
     <header className="fixed inset-x-0 top-0 z-50 bg-black/60 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* 3 columnas: logo | menú centrado | botón */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 py-3">
+        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-6 py-3">
           {/* Izquierda: Logo */}
           <a href="/" className="flex items-center gap-2">
             <img
@@ -34,8 +34,8 @@ export default function Navbar() {
           </a>
 
           {/* Centro: Menú */}
-          <nav className="hidden md:flex justify-center">
-            <ul className="flex items-center gap-7 font-display text-sm tracking-wide text-white/80">
+          <nav className="hidden md:flex justify-center w-full">
+            <ul className="flex items-center gap-12 md:gap-16 font-display text-[15px] tracking-wider text-white/80">
               {[
                 ["home", "Inicio"],
                 ["academy", "Academia"],
@@ -61,7 +61,7 @@ export default function Navbar() {
           {/* Derecha: Botón gradiente */}
           <div className="flex justify-end">
             <a
-              href="#login"
+              href="https://codigoenigma.com/"
               className="inline-flex items-center rounded-xl px-4 py-2 text-sm font-semibold
                          text-white shadow-sm transition
                          bg-linear-to-r from-blue-600 to-cyan-400
